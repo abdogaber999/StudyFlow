@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["dotnet-sdk_8"]
+
+[phases.build]
+cmds = ["dotnet publish StudyFlow.API/StudyFlow.API.csproj -c Release -o out"]
+
+[start]
+cmd = "dotnet out/StudyFlow.API.dll"
