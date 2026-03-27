@@ -16,6 +16,18 @@ namespace StudyFlow.Domain.Entities
         // Stores the full mind map structure as JSON
         public string? MindMapJson { get; set; }
 
+        // AI Generated Video URL
+        public string? VideoUrl { get; set; }
+
+        // AI Generated Podcast Audio URL
+        public string? AudioUrl { get; set; }
+
+        // 🔹 Video generation status (Processing / Ready / Failed)
+        public string VideoStatus { get; set; } = "Processing";
+
+        // 🔹 Audio generation status (Processing / Ready / Failed)
+        public string AudioStatus { get; set; } = "Processing";
+
         // Lecture files (PDF / Video / Audio etc.)
         public ICollection<LectureFile> LectureFiles { get; set; }
             = new HashSet<LectureFile>();

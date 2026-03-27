@@ -1,18 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
-using StudyFlow.Infrastructure.DbContexts;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using StudyFlow.Infrastructure.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StudyFlow.Infrastructure.DbContexts;
+using StudyFlow.Infrastructure.Identity;
 using StudyFlow.API.Services;
-using StudyFlow.API.Seed;
 using System.Text;
 
 namespace StudyFlow.API
 {
     public class Program
     {
+        public static IServiceProvider ServiceProvider { get; private set; } = null!;
+
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -21,9 +22,43 @@ namespace StudyFlow.API
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
 
-            // Swagger + JWT Support
+            // ==========================
+            // DB CONTEXT (PostgreSQL)
+            // ==========================
+            builder.Services.AddDbContext<StudyFlowDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            // ==========================
+            // Identity
+            // ==========================
+            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<StudyFlowDbContext>()
+                .AddDefaultTokenProviders();
+
+            // ==========================
+            // CORS POLICY
+            // ==========================
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+            // ==========================
+            // Swagger + JWT
+            // ==========================
             builder.Services.AddSwaggerGen(options =>
             {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "StudyFlow API",
+                    Version = "v1"
+                });
+
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     Name = "Authorization",
@@ -31,7 +66,7 @@ namespace StudyFlow.API
                     Scheme = "bearer",
                     BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "Enter your JWT token without Bearer prefix."
+                    Description = "Enter your JWT token"
                 });
 
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -50,27 +85,9 @@ namespace StudyFlow.API
                 });
             });
 
-            // DbContext
-            builder.Services.AddDbContext<StudyFlowDbContext>(options =>
-                options.UseSqlServer(
-                    builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            // Identity
-            builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-                            .AddEntityFrameworkStores<StudyFlowDbContext>()
-                            .AddDefaultTokenProviders();
-
-            // JWT Service
-            builder.Services.AddScoped<JwtService>();
-
-            // 🔥 AI Service
-            builder.Services.AddHttpClient<AiService>(client =>
-            {
-                client.BaseAddress = new Uri(
-                    builder.Configuration["AiSettings:BaseUrl"]!
-                );
-            });
-
+            // ==========================
+            // JWT Authentication
+            // ==========================
             var jwtSettings = builder.Configuration.GetSection("Jwt");
 
             builder.Services.AddAuthentication(options =>
@@ -93,29 +110,49 @@ namespace StudyFlow.API
                 };
             });
 
+            // JWT Service
+            builder.Services.AddScoped<JwtService>();
+
+            // ==========================
+            // AI Service
+            // ==========================
+            builder.Services.AddHttpClient<AiService>(client =>
+            {
+                client.BaseAddress = new Uri(
+                    builder.Configuration["AiSettings:BaseUrl"]!
+                );
+
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0");
+                client.DefaultRequestHeaders.Add("Accept", "application/json");
+            });
+
             var app = builder.Build();
 
-            // SEED DATA
+            ServiceProvider = app.Services;
+
+            // ==========================
+            // AUTO DATABASE MIGRATION
+            // ==========================
             using (var scope = app.Services.CreateScope())
             {
-                var services = scope.ServiceProvider;
-
-                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-                await RoleSeeder.SeedRolesAsync(roleManager);
-
-                var context = services.GetRequiredService<StudyFlowDbContext>();
-                await DataSeeder.SeedDataAsync(context);
+                var db = scope.ServiceProvider.GetRequiredService<StudyFlowDbContext>();
+                db.Database.Migrate();
             }
 
-            if (app.Environment.IsDevelopment())
+            // ==========================
+            // Middleware
+            // ==========================
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "StudyFlow API V1");
+                c.RoutePrefix = "swagger";
+            });
 
             app.UseHttpsRedirection();
 
-            app.UseStaticFiles();
+            // 🔥 CORS
+            app.UseCors("AllowAll");
 
             app.UseAuthentication();
             app.UseAuthorization();

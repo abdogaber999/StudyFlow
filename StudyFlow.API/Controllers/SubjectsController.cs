@@ -82,6 +82,25 @@ namespace StudyFlow.API.Controllers
             return Ok(subjects);
         }
 
+        // 🔓 Public - Get subjects by university (for register screen)
+        [HttpGet("by-university/{universityId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetSubjectsByUniversity(int universityId)
+        {
+            var subjects = await _context.Subjects
+                .AsNoTracking()
+                .Where(s => s.UniversityId == universityId)
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Name,
+                    s.Description
+                })
+                .ToListAsync();
+
+            return Ok(subjects);
+        }
+
         // 🎯 Student - My Courses with Progress
         [HttpGet("my-courses")]
         [Authorize(Roles = "Student")]
@@ -134,6 +153,46 @@ namespace StudyFlow.API.Controllers
             }
 
             return Ok(result);
+        }
+
+        // ======================================
+        // Doctor Dashboard (Subject + Lectures)
+        // ======================================
+        [HttpGet("{subjectId}/dashboard")]
+        [Authorize(Roles = "Doctor")]
+        public async Task<IActionResult> GetDoctorDashboard(int subjectId)
+        {
+            var doctorId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (doctorId == null)
+                return Unauthorized();
+
+            var subject = await _context.Subjects
+                .FirstOrDefaultAsync(s =>
+                    s.Id == subjectId &&
+                    s.DoctorId == doctorId);
+
+            if (subject == null)
+                return NotFound("Subject not found.");
+
+            var lectures = await _context.Lectures
+                .Where(l => l.SubjectId == subjectId)
+                .OrderBy(l => l.Order)
+                .Select(l => new
+                {
+                    l.Id,
+                    l.Title,
+                    l.Order
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                subjectId = subject.Id,
+                subjectName = subject.Name,
+                lectureCount = lectures.Count,
+                lectures
+            });
         }
 
         // 🔹 Helper method
