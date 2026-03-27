@@ -1,6 +1,9 @@
 [phases.setup]
 nixPkgs = ["dotnet-sdk_8"]
 
+[phases.install]
+cmds = ["dotnet restore StudyFlow.sln"]
+
 [phases.build]
 cmds = ["dotnet publish StudyFlow.sln -c Release -o out"]
 
