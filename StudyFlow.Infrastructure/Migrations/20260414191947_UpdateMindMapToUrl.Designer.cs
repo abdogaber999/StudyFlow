@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudyFlow.Infrastructure.DbContexts;
 
@@ -11,9 +12,11 @@ using StudyFlow.Infrastructure.DbContexts;
 namespace StudyFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(StudyFlowDbContext))]
-    partial class StudyFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260414191947_UpdateMindMapToUrl")]
+    partial class UpdateMindMapToUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,61 +24,6 @@ namespace StudyFlow.Infrastructure.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Lecture", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("AudioError")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AudioStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AudioUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MindMapError")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MindMapStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MindMapUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SubjectId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VideoError")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VideoStatus")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("VideoUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SubjectId");
-
-                    b.ToTable("Lectures");
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -208,6 +156,48 @@ namespace StudyFlow.Infrastructure.Migrations
                     b.HasKey("UserId", "LoginProvider", "Name");
 
                     b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("StudyFlow.Domain.Entities.Lecture", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AudioStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AudioUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MindMapUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("VideoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubjectId");
+
+                    b.ToTable("Lectures");
                 });
 
             modelBuilder.Entity("StudyFlow.Domain.Entities.LectureFile", b =>
@@ -637,17 +627,6 @@ namespace StudyFlow.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Lecture", b =>
-                {
-                    b.HasOne("StudyFlow.Domain.Entities.Subject", "Subject")
-                        .WithMany("Lectures")
-                        .HasForeignKey("SubjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Subject");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -699,9 +678,20 @@ namespace StudyFlow.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("StudyFlow.Domain.Entities.Lecture", b =>
+                {
+                    b.HasOne("StudyFlow.Domain.Entities.Subject", "Subject")
+                        .WithMany("Lectures")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Subject");
+                });
+
             modelBuilder.Entity("StudyFlow.Domain.Entities.LectureFile", b =>
                 {
-                    b.HasOne("Lecture", "Lecture")
+                    b.HasOne("StudyFlow.Domain.Entities.Lecture", "Lecture")
                         .WithMany("LectureFiles")
                         .HasForeignKey("LectureId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -712,7 +702,7 @@ namespace StudyFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("StudyFlow.Domain.Entities.LectureNote", b =>
                 {
-                    b.HasOne("Lecture", "Lecture")
+                    b.HasOne("StudyFlow.Domain.Entities.Lecture", "Lecture")
                         .WithMany("LectureNotes")
                         .HasForeignKey("LectureId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -723,7 +713,7 @@ namespace StudyFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("StudyFlow.Domain.Entities.Question", b =>
                 {
-                    b.HasOne("Lecture", "Lecture")
+                    b.HasOne("StudyFlow.Domain.Entities.Lecture", "Lecture")
                         .WithMany("Questions")
                         .HasForeignKey("LectureId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -752,7 +742,7 @@ namespace StudyFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("StudyFlow.Domain.Entities.Quiz", b =>
                 {
-                    b.HasOne("Lecture", "Lecture")
+                    b.HasOne("StudyFlow.Domain.Entities.Lecture", "Lecture")
                         .WithMany("Quizzes")
                         .HasForeignKey("LectureId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -763,7 +753,7 @@ namespace StudyFlow.Infrastructure.Migrations
 
             modelBuilder.Entity("StudyFlow.Domain.Entities.StudentLectureProgress", b =>
                 {
-                    b.HasOne("Lecture", "Lecture")
+                    b.HasOne("StudyFlow.Domain.Entities.Lecture", "Lecture")
                         .WithMany()
                         .HasForeignKey("LectureId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -816,7 +806,7 @@ namespace StudyFlow.Infrastructure.Migrations
                     b.Navigation("University");
                 });
 
-            modelBuilder.Entity("Lecture", b =>
+            modelBuilder.Entity("StudyFlow.Domain.Entities.Lecture", b =>
                 {
                     b.Navigation("LectureFiles");
 

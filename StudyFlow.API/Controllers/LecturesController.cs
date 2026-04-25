@@ -1,12 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using StudyFlow.API.DTOs;
-using StudyFlow.Infrastructure.DbContexts;
-using StudyFlow.Domain.Entities;
 using StudyFlow.API.Services;
-using System.Text.Json;
+using StudyFlow.Domain.Entities;
+using StudyFlow.Infrastructure.DbContexts;
 using System.Security.Claims;
+using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 
 namespace StudyFlow.API.Controllers
 {
@@ -205,14 +207,14 @@ namespace StudyFlow.API.Controllers
                 }
 
                 // =====================================
-                // 🔥 Ping AI Server
+                // 🔥 Ping AI Server (UPDATED)
                 // =====================================
                 try
                 {
                     using var pingClient = new HttpClient();
                     pingClient.Timeout = TimeSpan.FromSeconds(10);
 
-                    var ping = await pingClient.GetAsync("http://187.124.161.116/");
+                    var ping = await pingClient.GetAsync("http://187.124.217.251/");
 
                     if (!ping.IsSuccessStatusCode)
                     {
@@ -233,7 +235,7 @@ namespace StudyFlow.API.Controllers
                 }
 
                 // =====================================
-                // 🔥 Direct AI Call
+                // 🔥 Direct AI Call (UPDATED)
                 // =====================================
                 var bytes = await System.IO.File.ReadAllBytesAsync(physicalPath);
 
@@ -243,15 +245,14 @@ namespace StudyFlow.API.Controllers
                 fileContent.Headers.ContentType =
                     new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
 
-                // 🔥 بدون text
                 form.Add(fileContent, "file", Path.GetFileName(physicalPath));
 
                 using var aiClient = new HttpClient();
                 aiClient.Timeout = TimeSpan.FromMinutes(5);
-                aiClient.BaseAddress = new Uri("http://187.124.161.116/");
+                aiClient.BaseAddress = new Uri("http://187.124.217.251/");
 
                 var response = await aiClient.PostAsync(
-                    "api/v1/text/generate-educational-package",
+                    "api/v1/text/generate-question-bank",
                     form
                 );
 
@@ -314,41 +315,23 @@ namespace StudyFlow.API.Controllers
                 }
 
                 // =====================================
-                // 🔥 Call AI via Service
+                // 🔥 Call AI via Service (NO CHANGE)
                 // =====================================
-                var cleanJson = await _aiService.ProcessPdfRawAsync(physicalPath);
+                var aiResult = await _aiService.ProcessPdfAsync(physicalPath);
 
-                if (string.IsNullOrEmpty(cleanJson))
+                if (aiResult == null)
                 {
                     return Ok(new
                     {
-                        step = "AI_EMPTY_RESPONSE"
+                        step = "AI_FAILED"
                     });
                 }
-
-                JsonDocument doc;
-
-                try
-                {
-                    doc = JsonDocument.Parse(cleanJson);
-                }
-                catch
-                {
-                    return Ok(new
-                    {
-                        step = "INVALID_JSON",
-                        response = cleanJson
-                    });
-                }
-
-                var root = doc.RootElement;
 
                 return Ok(new
                 {
                     step = "SUCCESS",
-                    hasQuestionBank = root.TryGetProperty("question_bank", out _),
-                    hasMindMap = root.TryGetProperty("mindmap", out _),
-                    sample = cleanJson.Substring(0, Math.Min(300, cleanJson.Length))
+                    mcqCount = aiResult.Mcq.Count,
+                    tfCount = aiResult.TrueFalse.Count
                 });
             }
             catch (Exception ex)
@@ -359,6 +342,25 @@ namespace StudyFlow.API.Controllers
                     error = ex.Message
                 });
             }
+        }
+
+        // ===============================
+        // 🔥 Test Timeout
+        // ===============================
+        [HttpGet("test-timeout")]
+        [AllowAnonymous]
+        public async Task<IActionResult> TestTimeout()
+        {
+            Console.WriteLine("TEST TIMEOUT STARTED");
+
+            await Task.Delay(TimeSpan.FromMinutes(4)); // غيرها زي ما تحب
+
+            Console.WriteLine("TEST TIMEOUT FINISHED");
+
+            return Ok(new
+            {
+                message = "Request completed after delay"
+            });
         }
 
 
@@ -423,92 +425,55 @@ namespace StudyFlow.API.Controllers
                 return Ok(new
                 {
                     message = "File not found on server",
-                    path = physicalPath,
-                    webRoot = _env.WebRootPath,
-                    fileFromDb = pdf.FilePath
+                    path = physicalPath
                 });
             }
 
             // ===============================
-            // 🔥 Call AI (clean JSON already)
+            // 🔥 Call AI (NEW CLEAN WAY)
             // ===============================
-            var cleanJson = await _aiService.ProcessPdfRawAsync(physicalPath);
+            var aiResult = await _aiService.ProcessPdfAsync(physicalPath);
 
-            if (string.IsNullOrEmpty(cleanJson))
-                return BadRequest("AI returned empty response");
-
-            JsonDocument doc;
-
-            try
-            {
-                doc = JsonDocument.Parse(cleanJson);
-            }
-            catch
-            {
-                return Ok(new
-                {
-                    message = "Invalid JSON from AI",
-                    rawResponse = cleanJson
-                });
-            }
-
-            var root = doc.RootElement;
-
-            // ===============================
-            // 🔍 VALIDATION
-            // ===============================
-            if (!root.TryGetProperty("question_bank", out var questionBankElement))
-            {
-                return Ok(new
-                {
-                    message = "AI response structure different",
-                    rawResponse = cleanJson
-                });
-            }
-
-            if (!questionBankElement.TryGetProperty("questions", out var questionsElement))
-            {
-                return Ok(new
-                {
-                    message = "questions array not found",
-                    rawResponse = cleanJson
-                });
-            }
+            if (aiResult == null)
+                return BadRequest("AI failed");
 
             var newQuestions = new List<Question>();
 
-            foreach (var q in questionsElement.EnumerateArray())
+            // ===============================
+            // 🔥 MCQ
+            // ===============================
+            foreach (var mcq in aiResult.Mcq)
             {
-                if (!q.TryGetProperty("question", out var questionProp))
-                    continue;
-
-                var questionText = questionProp.GetString() ?? "";
-
-                var options = new List<QuestionOption>();
-
-                if (q.TryGetProperty("options", out var optionsElement))
+                var options = mcq.Options.Select(opt => new QuestionOption
                 {
-                    foreach (var opt in optionsElement.EnumerateArray())
-                    {
-                        var text = opt.GetProperty("text").GetString() ?? "";
-                        var isCorrect = opt.GetProperty("is_correct").GetBoolean();
-
-                        options.Add(new QuestionOption
-                        {
-                            Text = text,
-                            IsCorrect = isCorrect
-                        });
-                    }
-                }
-
-                var type = options.Count == 2 ? "TrueFalse" : "MCQ";
+                    Text = opt.Value,
+                    IsCorrect = opt.Key == mcq.Answer
+                }).ToList();
 
                 newQuestions.Add(new Question
                 {
-                    Text = questionText,
-                    Type = type,
+                    Text = mcq.Question,
+                    Type = "MCQ",
                     LectureId = lectureId,
                     QuestionOptions = options
+                });
+            }
+
+            // ===============================
+            // 🔥 True / False
+            // ===============================
+            foreach (var tf in aiResult.TrueFalse)
+            {
+                newQuestions.Add(new Question
+                {
+                    Text = tf.Question,
+                    Type = "TrueFalse",
+                    LectureId = lectureId,
+                    QuestionOptions = new List<QuestionOption>
+            {
+                new QuestionOption { Text = "True", IsCorrect = tf.Answer },
+                new QuestionOption { Text = "False", IsCorrect = !tf.Answer }
+            }
                 });
             }
 
@@ -568,7 +533,56 @@ namespace StudyFlow.API.Controllers
         }
 
         // ===============================
-        // 🔥 Get MindMap Only
+        // 🔥 Generate MindMap From AI
+        // ===============================
+        [HttpPost("generate-mindmap/{lectureId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GenerateMindMap(int lectureId)
+        {
+            var lecture = await _context.Lectures
+                .Include(l => l.LectureFiles)
+                .FirstOrDefaultAsync(l => l.Id == lectureId);
+
+            if (lecture == null)
+                return NotFound("Lecture not found");
+
+            var pdf = lecture.LectureFiles
+                .FirstOrDefault(f => f.FileCategory == "PDF");
+
+            if (pdf == null)
+                return BadRequest("PDF file not found");
+
+            var fileName = Path.GetFileName(pdf.FilePath);
+
+            var physicalPath = Path.Combine(
+                _env.WebRootPath,
+                "lectures",
+                fileName
+            );
+
+            if (!System.IO.File.Exists(physicalPath))
+                return BadRequest("File not found");
+
+            var mindMapUrl = await _aiService.GenerateMindMapAsync(physicalPath);
+
+            if (string.IsNullOrEmpty(mindMapUrl))
+                return BadRequest("AI failed");
+
+            // 🔥 أهم سطر
+            lecture.MindMapUrl = mindMapUrl;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "MindMap generated successfully",
+                url = mindMapUrl
+            });
+        }
+
+
+        // ===============================
+        // Get MindMap (Production Clean)
         // ===============================
         [HttpGet("{lectureId}/mindmap")]
         [Authorize]
@@ -580,14 +594,156 @@ namespace StudyFlow.API.Controllers
             if (lecture == null)
                 return NotFound("Lecture not found.");
 
-            if (string.IsNullOrEmpty(lecture.MindMapJson))
-                return Ok(null);
+            if (lecture.MindMapStatus == "Processing")
+            {
+                return Ok(new
+                {
+                    status = "processing",
+                    message = "MindMap is still being generated"
+                });
+            }
 
-            return Ok(JsonSerializer.Deserialize<object>(lecture.MindMapJson));
+            if (lecture.MindMapStatus == "Failed")
+            {
+                return Ok(new
+                {
+                    status = "failed",
+                    message = "MindMap generation failed",
+                    error = lecture.MindMapError
+                });
+            }
+
+            if (lecture.MindMapStatus == "Ready" && !string.IsNullOrEmpty(lecture.MindMapUrl))
+            {
+                return Ok(new
+                {
+                    status = "ready",
+                    mindMapUrl = lecture.MindMapUrl
+                });
+            }
+
+            return Ok(new
+            {
+                status = "not_started",
+                message = "MindMap generation not started yet"
+            });
         }
 
         // ===============================
-        // Get Lecture Video
+        // 🔥 Generate Video (SYNC DIRECT)
+        // ===============================
+        [HttpPost("generate-video/{lectureId}")]
+        [Authorize]
+        public async Task<IActionResult> GenerateVideo(int lectureId)
+        {
+            var lecture = await _context.Lectures
+                .Include(l => l.LectureFiles)
+                .FirstOrDefaultAsync(l => l.Id == lectureId);
+
+            if (lecture == null)
+                return NotFound("Lecture not found");
+
+            var pdf = lecture.LectureFiles
+                .FirstOrDefault(f => f.FileCategory == "PDF");
+
+            if (pdf == null)
+                return BadRequest("PDF file not found");
+
+            var fileName = Path.GetFileName(pdf.FilePath);
+
+            var physicalPath = Path.Combine(
+                _env.WebRootPath,
+                "lectures",
+                fileName
+            );
+
+            if (!System.IO.File.Exists(physicalPath))
+                return BadRequest("File not found");
+
+            // 🔥 set processing
+            lecture.VideoStatus = "Processing";
+            lecture.VideoError = null;
+            lecture.VideoUrl = null;
+
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                // 🔥 call AI مباشرة (زي الأوديو)
+                var videoUrl = await _aiService.GenerateVideoAsync(physicalPath);
+
+                if (string.IsNullOrEmpty(videoUrl))
+                {
+                    lecture.VideoStatus = "Failed";
+                    await _context.SaveChangesAsync();
+
+                    return BadRequest(new
+                    {
+                        status = "failed",
+                        message = "AI failed to generate video"
+                    });
+                }
+
+                // ✅ success
+                lecture.VideoUrl = videoUrl;
+                lecture.VideoStatus = "Ready";
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    status = "ready",
+                    videoUrl = videoUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                lecture.VideoStatus = "Failed";
+                await _context.SaveChangesAsync();
+
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+        }
+
+        //// ===============================
+        //// 🔥 Video Callback (Webhook)
+        //// ===============================
+        //[HttpPost("video-callback")]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> VideoCallback([FromBody] VideoCallbackDto dto)
+        //{
+        //    if (dto == null || dto.LectureId == 0 || string.IsNullOrEmpty(dto.FinalVideoUrl))
+        //    {
+        //        return BadRequest("Invalid data");
+        //    }
+
+        //    var lecture = await _context.Lectures.FindAsync(dto.LectureId);
+
+        //    if (lecture == null)
+        //        return NotFound("Lecture not found");
+
+        //    // 🔥 نحفظ الفيديو
+        //    lecture.VideoUrl = dto.FinalVideoUrl;
+        //    lecture.VideoStatus = "Ready";
+        //    lecture.VideoError = null;
+
+        //    await _context.SaveChangesAsync();
+
+        //    Console.WriteLine($"VIDEO CALLBACK RECEIVED: Lecture {dto.LectureId}");
+
+        //    return Ok(new
+        //    {
+        //        message = "Video saved successfully"
+        //    });
+        //}
+
+
+        // ===============================
+        // Get Lecture Video (Production Clean)
         // ===============================
         [HttpGet("{lectureId}/video")]
         [Authorize]
@@ -608,21 +764,109 @@ namespace StudyFlow.API.Controllers
                 });
             }
 
-            if (lecture.VideoStatus == "Failed" || string.IsNullOrEmpty(lecture.VideoUrl))
+            if (lecture.VideoStatus == "Failed")
             {
-                return NotFound(new
+                return Ok(new
                 {
-                    status = "not_found",
-                    message = "Video not available"
+                    status = "failed",
+                    message = "Video generation failed",
+                    error = lecture.VideoError
+                });
+            }
+
+            if (lecture.VideoStatus == "Ready" && !string.IsNullOrEmpty(lecture.VideoUrl))
+            {
+                return Ok(new
+                {
+                    status = "ready",
+                    videoUrl = lecture.VideoUrl
                 });
             }
 
             return Ok(new
             {
-                status = "ready",
-                videoUrl = lecture.VideoUrl
+                status = "not_started",
+                message = "Video generation not started yet"
             });
         }
+
+        // ===============================
+        // 🔥 Generate Podcast From AI (SYNC DIRECT)
+        // ===============================
+        [HttpPost("generate-audio/{lectureId}")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GenerateAudio(int lectureId)
+        {
+            var lecture = await _context.Lectures
+                .Include(l => l.LectureFiles)
+                .FirstOrDefaultAsync(l => l.Id == lectureId);
+
+            if (lecture == null)
+                return NotFound("Lecture not found");
+
+            var pdf = lecture.LectureFiles
+                .FirstOrDefault(f => f.FileCategory == "PDF");
+
+            if (pdf == null)
+                return BadRequest("PDF file not found");
+
+            var fileName = Path.GetFileName(pdf.FilePath);
+
+            var physicalPath = Path.Combine(
+                _env.WebRootPath,
+                "lectures",
+                fileName
+            );
+
+            if (!System.IO.File.Exists(physicalPath))
+                return BadRequest("File not found");
+
+            // 🔥 set processing
+            lecture.AudioStatus = "Processing";
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                // 🔥 call AI مباشرة (هيستنى)
+                var audioUrl = await _aiService.GeneratePodcastAsync(physicalPath);
+
+                if (string.IsNullOrEmpty(audioUrl))
+                {
+                    lecture.AudioStatus = "Failed";
+                    await _context.SaveChangesAsync();
+
+                    return BadRequest(new
+                    {
+                        status = "failed",
+                        message = "AI failed to generate audio"
+                    });
+                }
+
+                // ✅ success
+                lecture.AudioUrl = audioUrl;
+                lecture.AudioStatus = "Ready";
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    status = "ready",
+                    audioUrl = audioUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                lecture.AudioStatus = "Failed";
+                await _context.SaveChangesAsync();
+
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
+        }
+
 
         // ===============================
         // Get Lecture Podcast

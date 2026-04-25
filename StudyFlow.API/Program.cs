@@ -23,10 +23,10 @@ namespace StudyFlow.API
             builder.Services.AddEndpointsApiExplorer();
 
             // ==========================
-            // DB CONTEXT (PostgreSQL)
+            // DB CONTEXT (SQL Server)
             // ==========================
             builder.Services.AddDbContext<StudyFlowDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             // ==========================
             // Identity
@@ -133,15 +133,31 @@ namespace StudyFlow.API
             // ==========================
             // AUTO DATABASE MIGRATION
             // ==========================
+            /*
             using (var scope = app.Services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<StudyFlowDbContext>();
                 db.Database.Migrate();
             }
+            */
 
             // ==========================
             // Middleware
             // ==========================
+
+            // 🔥 مهم جدًا (عشان نشوف الخطأ الحقيقي)
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.MapGet("/", context =>
+            {
+                context.Response.Redirect("/swagger");
+                return Task.CompletedTask;
+            });
+
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
@@ -149,9 +165,8 @@ namespace StudyFlow.API
                 c.RoutePrefix = "swagger";
             });
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
-            // 🔥 CORS
             app.UseCors("AllowAll");
 
             app.UseAuthentication();

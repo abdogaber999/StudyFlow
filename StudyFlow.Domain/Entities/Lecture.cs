@@ -1,47 +1,46 @@
-﻿using System.Collections.Generic;
+﻿using StudyFlow.Domain.Entities;
 
-namespace StudyFlow.Domain.Entities
+public class Lecture : BaseEntity
 {
-    public class Lecture : BaseEntity
-    {
-        public string Title { get; set; } = null!;
+    public string Title { get; set; } = null!;
 
-        public int Order { get; set; }
+    public int Order { get; set; }
 
-        public int SubjectId { get; set; }
+    public int SubjectId { get; set; }
 
-        public Subject Subject { get; set; } = null!;
+    public Subject Subject { get; set; } = null!;
 
-        // Mind Map JSON generated from AI
-        // Stores the full mind map structure as JSON
-        public string? MindMapJson { get; set; }
+    // 🔥 Mind Map
+    public string? MindMapUrl { get; set; }
 
-        // AI Generated Video URL
-        public string? VideoUrl { get; set; }
+    public string MindMapStatus { get; set; } = "NotStarted"; // ✅ جديد
 
-        // AI Generated Podcast Audio URL
-        public string? AudioUrl { get; set; }
+    public string? MindMapError { get; set; } // ✅ جديد
 
-        // 🔹 Video generation status (Processing / Ready / Failed)
-        public string VideoStatus { get; set; } = "Processing";
+    // 🎥 Video
+    public string? VideoUrl { get; set; }
 
-        // 🔹 Audio generation status (Processing / Ready / Failed)
-        public string AudioStatus { get; set; } = "Processing";
+    public string VideoStatus { get; set; } = "NotStarted";
 
-        // Lecture files (PDF / Video / Audio etc.)
-        public ICollection<LectureFile> LectureFiles { get; set; }
-            = new HashSet<LectureFile>();
+    public string? VideoError { get; set; }
 
-        // Quizzes generated from wrong questions
-        public ICollection<Quiz> Quizzes { get; set; }
-            = new HashSet<Quiz>();
+    // 🎧 Audio
+    public string? AudioUrl { get; set; }
 
-        // Question Bank questions linked directly to lecture
-        public ICollection<Question> Questions { get; set; }
-            = new HashSet<Question>();
+    public string AudioStatus { get; set; } = "NotStarted";
 
-        // Student Notes related to this lecture
-        public ICollection<LectureNote> LectureNotes { get; set; }
-            = new HashSet<LectureNote>();
-    }
+    public string? AudioError { get; set; }
+
+    // Files
+    public ICollection<LectureFile> LectureFiles { get; set; }
+        = new HashSet<LectureFile>();
+
+    public ICollection<Quiz> Quizzes { get; set; }
+        = new HashSet<Quiz>();
+
+    public ICollection<Question> Questions { get; set; }
+        = new HashSet<Question>();
+
+    public ICollection<LectureNote> LectureNotes { get; set; }
+        = new HashSet<LectureNote>();
 }
