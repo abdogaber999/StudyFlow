@@ -19,15 +19,24 @@ namespace StudyFlow.API.Controllers
         private readonly StudyFlowDbContext _context;
         private readonly AiService _aiService;
         private readonly IWebHostEnvironment _env;
+        private readonly NotificationService _notificationService;
+        private readonly LecturePipelineService _PipelineService;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public LecturesController(
     StudyFlowDbContext context,
     AiService aiService,
-    IWebHostEnvironment env)
+    IWebHostEnvironment env,
+    NotificationService notificationService,
+    LecturePipelineService PipelineService,
+    IServiceScopeFactory scopeFactory)
         {
             _context = context;
             _aiService = aiService;
             _env = env;
+            _notificationService = notificationService;
+            _PipelineService = PipelineService;
+            _scopeFactory = scopeFactory;
         }
 
         // ===============================
@@ -158,6 +167,30 @@ namespace StudyFlow.API.Controllers
 
             // 🔥 Save مرة واحدة فقط
             await _context.SaveChangesAsync();
+
+            // 🔥 شغل الـ pipeline في الخلفية (FIXED DI SCOPE)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    using var scope = _scopeFactory.CreateScope();
+                    var pipeline = scope.ServiceProvider.GetRequiredService<LecturePipelineService>();
+
+                    Console.WriteLine("🔥 PIPELINE STARTED");
+
+                    await pipeline.StartPipeline(lectureId);
+
+                    Console.WriteLine("✅ PIPELINE FINISHED");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("❌ PIPELINE ERROR: " + ex.Message);
+                    Console.WriteLine("❌ PIPELINE ERROR for Lecture " + lectureId + ": " + ex.Message);
+                    Console.WriteLine("❌ STACK TRACE: " + ex.StackTrace);
+                    if (ex.InnerException != null)
+                    Console.WriteLine("❌ INNER: " + ex.InnerException.Message);
+                }
+            });
 
             return Ok(new
             {
@@ -384,13 +417,18 @@ namespace StudyFlow.API.Controllers
             if (pdf == null)
                 return Ok(null);
 
+            // 🔥 بنرجع Full URL عشان الفلاتر يقدر يفتحه مباشرة
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+
             return Ok(new
             {
                 pdf.Id,
                 pdf.FileName,
-                pdf.FilePath
+                pdf.FilePath,
+                fullUrl = $"{baseUrl}{Uri.EscapeUriString(pdf.FilePath)}"
             });
         }
+
 
         // ===============================
         // 🔥 Generate Question Bank From AI (Clean)
@@ -470,10 +508,10 @@ namespace StudyFlow.API.Controllers
                     Type = "TrueFalse",
                     LectureId = lectureId,
                     QuestionOptions = new List<QuestionOption>
-            {
-                new QuestionOption { Text = "True", IsCorrect = tf.Answer },
-                new QuestionOption { Text = "False", IsCorrect = !tf.Answer }
-            }
+    {
+        new QuestionOption { Text = "True", IsCorrect = tf.Answer },
+        new QuestionOption { Text = "False", IsCorrect = !tf.Answer }
+    }
                 });
             }
 
@@ -482,6 +520,9 @@ namespace StudyFlow.API.Controllers
 
             _context.Questions.AddRange(newQuestions);
             await _context.SaveChangesAsync();
+
+            // 🔔 Notification
+            await _notificationService.SendToLectureUsers(lectureId, "Questions");
 
             return Ok(new
             {
@@ -493,7 +534,7 @@ namespace StudyFlow.API.Controllers
 
 
         // ===============================
-        // 🔥 Get Question Bank (Clean + Production)
+        // 🔥 Get Question Bank (Random Limited)
         // ===============================
         [HttpGet("{lectureId}/questions")]
         [Authorize]
@@ -509,10 +550,16 @@ namespace StudyFlow.API.Controllers
                     message = "Lecture not found"
                 });
 
-            var questions = await _context.Questions
-                .Where(q => q.LectureId == lectureId && q.QuizId == null)
+            // 🔥 شيلنا شرط QuizId عشان يرجع كل الأسئلة حتى اللي اتكررت
+            var allQuestions = await _context.Questions
+                .Where(q => q.LectureId == lectureId)
                 .Include(q => q.QuestionOptions)
-                .Select(q => new
+                .ToListAsync();
+
+            // ✅ لو 50 أو أقل → رجّع كله
+            if (allQuestions.Count <= 50)
+            {
+                var result = allQuestions.Select(q => new
                 {
                     q.Id,
                     q.Text,
@@ -522,18 +569,52 @@ namespace StudyFlow.API.Controllers
                         o.Id,
                         o.Text
                     }).ToList()
-                })
-                .ToListAsync();
+                });
+
+                return Ok(new
+                {
+                    count = result.Count(),
+                    data = result
+                });
+            }
+
+            // 🔥 لو أكتر من 50 → Random Selection
+
+            var mcq = allQuestions
+                .Where(q => q.Type == "MCQ")
+                .OrderBy(x => Guid.NewGuid())
+                .Take(30);
+
+            var tf = allQuestions
+                .Where(q => q.Type == "TrueFalse")
+                .OrderBy(x => Guid.NewGuid())
+                .Take(20);
+
+            var selected = mcq.Concat(tf)
+                .OrderBy(x => Guid.NewGuid()) // shuffle النهائي
+                .ToList();
+
+            var data = selected.Select(q => new
+            {
+                q.Id,
+                q.Text,
+                q.Type,
+                options = q.QuestionOptions.Select(o => new
+                {
+                    o.Id,
+                    o.Text
+                }).ToList()
+            });
 
             return Ok(new
             {
-                count = questions.Count,
-                data = questions
+                count = data.Count(),
+                data = data
             });
         }
 
         // ===============================
-        // 🔥 Generate MindMap From AI
+        // 🔥 Generate MindMap From AI (SYNC)
         // ===============================
         [HttpPost("generate-mindmap/{lectureId}")]
         [AllowAnonymous]
@@ -563,21 +644,57 @@ namespace StudyFlow.API.Controllers
             if (!System.IO.File.Exists(physicalPath))
                 return BadRequest("File not found");
 
-            var mindMapUrl = await _aiService.GenerateMindMapAsync(physicalPath);
-
-            if (string.IsNullOrEmpty(mindMapUrl))
-                return BadRequest("AI failed");
-
-            // 🔥 أهم سطر
-            lecture.MindMapUrl = mindMapUrl;
+            // 🔥 set processing
+            lecture.MindMapStatus = "Processing";
+            lecture.MindMapError = null;
+            lecture.MindMapUrl = null;
 
             await _context.SaveChangesAsync();
 
-            return Ok(new
+            try
             {
-                message = "MindMap generated successfully",
-                url = mindMapUrl
-            });
+                var mindMapUrl = await _aiService.GenerateMindMapAsync(physicalPath);
+
+                if (string.IsNullOrEmpty(mindMapUrl))
+                {
+                    lecture.MindMapStatus = "Failed";
+                    await _context.SaveChangesAsync();
+
+                    return BadRequest(new
+                    {
+                        status = "failed",
+                        message = "AI failed to generate mindmap"
+                    });
+                }
+
+                // ✅ success
+                lecture.MindMapUrl = mindMapUrl;
+                lecture.MindMapStatus = "Ready";
+
+                await _context.SaveChangesAsync();
+
+                // 🔔 Notification
+                await _notificationService.SendToLectureUsers(lectureId, "MindMap");
+
+                return Ok(new
+                {
+                    status = "ready",
+                    mindMapUrl = mindMapUrl
+                });
+            }
+            catch (Exception ex)
+            {
+                lecture.MindMapStatus = "Failed";
+                lecture.MindMapError = ex.Message;
+
+                await _context.SaveChangesAsync();
+
+                return BadRequest(new
+                {
+                    status = "error",
+                    message = ex.Message
+                });
+            }
         }
 
 
@@ -669,7 +786,7 @@ namespace StudyFlow.API.Controllers
 
             try
             {
-                // 🔥 call AI مباشرة (زي الأوديو)
+                
                 var videoUrl = await _aiService.GenerateVideoAsync(physicalPath);
 
                 if (string.IsNullOrEmpty(videoUrl))
@@ -689,6 +806,9 @@ namespace StudyFlow.API.Controllers
                 lecture.VideoStatus = "Ready";
 
                 await _context.SaveChangesAsync();
+
+                // 🔔 Notification
+                await _notificationService.SendToLectureUsers(lectureId, "Video");
 
                 return Ok(new
                 {
@@ -848,6 +968,9 @@ namespace StudyFlow.API.Controllers
 
                 await _context.SaveChangesAsync();
 
+                // 🔔 Notification
+                await _notificationService.SendToLectureUsers(lectureId, "Audio");
+
                 return Ok(new
                 {
                     status = "ready",
@@ -960,6 +1083,15 @@ namespace StudyFlow.API.Controllers
             }
 
             // ===============================
+            // Delete Notifications
+            // ===============================
+            var notifications = await _context.Notifications
+                .Where(n => n.LectureId == lectureId)
+                .ToListAsync();
+
+            _context.Notifications.RemoveRange(notifications);
+
+            // ===============================
             // Delete Questions + Options
             // ===============================
             _context.QuestionOptions.RemoveRange(
@@ -983,45 +1115,55 @@ namespace StudyFlow.API.Controllers
         }
 
 
+        // ===============================
+        // 🔥 Toggle PDF Complete
+        // ===============================
+        [HttpPost("{lectureId}/progress/pdf")]
+        [Authorize(Roles = "Student")]
+        public async Task<IActionResult> MarkPdfComplete(int lectureId)
+        {
+            return await UpdateProgress(lectureId, p => p.PdfCompleted = !p.PdfCompleted);
+        }
+
 
         // ===============================
-        // 🔥 Mark Video Complete
+        // 🔥 Toggle Video Complete
         // ===============================
         [HttpPost("{lectureId}/progress/video")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> MarkVideoComplete(int lectureId)
         {
-            return await UpdateProgress(lectureId, p => p.VideoCompleted = true);
+            return await UpdateProgress(lectureId, p => p.VideoCompleted = !p.VideoCompleted);
         }
 
         // ===============================
-        // 🔥 Mark Audio Complete
+        // 🔥 Toggle Audio Complete
         // ===============================
         [HttpPost("{lectureId}/progress/audio")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> MarkAudioComplete(int lectureId)
         {
-            return await UpdateProgress(lectureId, p => p.AudioCompleted = true);
+            return await UpdateProgress(lectureId, p => p.AudioCompleted = !p.AudioCompleted);
         }
 
         // ===============================
-        // 🔥 Mark MindMap Complete
+        // 🔥 Toggle MindMap Complete
         // ===============================
         [HttpPost("{lectureId}/progress/mindmap")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> MarkMindMapComplete(int lectureId)
         {
-            return await UpdateProgress(lectureId, p => p.MindMapCompleted = true);
+            return await UpdateProgress(lectureId, p => p.MindMapCompleted = !p.MindMapCompleted);
         }
 
         // ===============================
-        // 🔥 Mark QuestionBank Complete
+        // 🔥 Toggle QuestionBank Complete
         // ===============================
         [HttpPost("{lectureId}/progress/questionbank")]
         [Authorize(Roles = "Student")]
         public async Task<IActionResult> MarkQuestionBankComplete(int lectureId)
         {
-            return await UpdateProgress(lectureId, p => p.QuestionBankCompleted = true);
+            return await UpdateProgress(lectureId, p => p.QuestionBankCompleted = !p.QuestionBankCompleted);
         }
 
         // ===============================
@@ -1048,8 +1190,9 @@ namespace StudyFlow.API.Controllers
             if (progress.AudioCompleted) completed++;
             if (progress.MindMapCompleted) completed++;
             if (progress.QuestionBankCompleted) completed++;
+            if (progress.PdfCompleted) completed++; 
 
-            int percentage = (completed * 100) / 4;
+            int percentage = (completed * 100) / 5; 
 
             progress.IsCompleted = percentage == 100;
             progress.LastAccessedAt = DateTime.UtcNow;
@@ -1058,6 +1201,7 @@ namespace StudyFlow.API.Controllers
 
             return Ok(new
             {
+                progress.PdfCompleted,
                 progress.VideoCompleted,
                 progress.AudioCompleted,
                 progress.MindMapCompleted,
@@ -1132,12 +1276,13 @@ namespace StudyFlow.API.Controllers
                         p.StudentId == studentId &&
                         p.LectureId == lecture.Id);
 
+                bool pdf = progress?.PdfCompleted ?? false;
                 bool video = progress?.VideoCompleted ?? false;
                 bool audio = progress?.AudioCompleted ?? false;
                 bool mindmap = progress?.MindMapCompleted ?? false;
                 bool questionBank = progress?.QuestionBankCompleted ?? false;
 
-                bool isCompleted = video && mindmap && questionBank;
+                bool isCompleted = pdf && video && mindmap && questionBank;
 
                 if (isCompleted)
                     completedLectures++;
@@ -1155,6 +1300,7 @@ namespace StudyFlow.API.Controllers
                     status,
                     progress = new
                     {
+                        pdfCompleted = pdf,
                         videoCompleted = video,
                         audioCompleted = audio,
                         mindMapCompleted = mindmap,

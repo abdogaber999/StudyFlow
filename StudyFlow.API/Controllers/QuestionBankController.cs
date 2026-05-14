@@ -39,12 +39,27 @@ namespace StudyFlow.API.Controllers
             var questions = await _context.Questions
                 .Include(q => q.QuestionOptions)
                 .Where(q =>
-                    q.LectureId == model.LectureId &&
-                    q.QuizId == null)   // 🔥 Question Bank only
+                    q.LectureId == model.LectureId)   // 🔥 Question Bank only
                 .ToListAsync();
 
             if (!questions.Any())
                 return BadRequest("No question bank found for this lecture.");
+
+            // =====================================
+            // 🔥 CLEAN OLD ANSWERS (IMPORTANT جداً)
+            // =====================================
+            var oldAnswers = await _context.StudentQuestionBankAnswers
+                .Include(a => a.Question)
+                .Where(a =>
+                    a.StudentId == studentId &&
+                    a.Question.LectureId == model.LectureId)
+                .ToListAsync();
+
+            if (oldAnswers.Any())
+            {
+                _context.StudentQuestionBankAnswers.RemoveRange(oldAnswers);
+                await _context.SaveChangesAsync();
+            }
 
             int score = 0;
             var wrongQuestions = new List<Question>();
@@ -92,7 +107,8 @@ namespace StudyFlow.API.Controllers
                 {
                     questionId = question.Id,
                     isCorrect,
-                    correctOptionId = correctOption?.Id
+                    correctOptionId = correctOption?.Id,
+                    selectedOptionId = answer.SelectedOptionId
                 });
             }
 
@@ -101,6 +117,36 @@ namespace StudyFlow.API.Controllers
             // =====================================
             int? quizId = null;
 
+            // =====================================
+            // 🔥 REMOVE OLD QUIZ (FULL RESET)
+            // =====================================
+            var oldQuizzes = await _context.Quizzes
+                .Where(q => q.LectureId == model.LectureId)
+                .ToListAsync();
+
+            if (oldQuizzes.Any())
+            {
+                var oldQuizIds = oldQuizzes.Select(q => q.Id).ToList();
+
+                // 🔥 فك الربط من كل الأسئلة المرتبطة بأي Quiz قديم
+                var linkedQuestions = await _context.Questions
+                    .Where(q => q.QuizId != null && oldQuizIds.Contains(q.QuizId.Value))
+                    .ToListAsync();
+
+                foreach (var q in linkedQuestions)
+                {
+                    q.QuizId = null;
+                }
+
+                // 🔥 امسح كل الـ quizzes القديمة
+                _context.Quizzes.RemoveRange(oldQuizzes);
+
+                await _context.SaveChangesAsync();
+            }
+
+            // =====================================
+            // 🔥 CREATE NEW QUIZ FROM WRONG QUESTIONS
+            // =====================================
             if (wrongQuestions.Any())
             {
                 var quiz = new Quiz
@@ -117,6 +163,8 @@ namespace StudyFlow.API.Controllers
                 {
                     question.QuizId = quiz.Id;
                 }
+
+                await _context.SaveChangesAsync();
             }
 
             // =====================================
@@ -149,6 +197,8 @@ namespace StudyFlow.API.Controllers
             {
                 score,
                 total = model.Answers.Count,
+                correct = score,
+                wrong = model.Answers.Count - score,
                 percentage = model.Answers.Count == 0
                     ? 0
                     : (score * 100) / model.Answers.Count,

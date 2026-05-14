@@ -113,6 +113,12 @@ namespace StudyFlow.API
             // JWT Service
             builder.Services.AddScoped<JwtService>();
 
+            // Notification Service
+            builder.Services.AddScoped<NotificationService>();
+
+            // Pipeline Service
+            builder.Services.AddScoped<LecturePipelineService>();
+
             // ==========================
             // AI Service
             // ==========================
@@ -171,7 +177,7 @@ namespace StudyFlow.API
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseStaticFiles();
             app.MapControllers();
 
             await app.RunAsync();

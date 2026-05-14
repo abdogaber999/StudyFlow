@@ -25,8 +25,7 @@ namespace StudyFlow.Infrastructure.DbContexts
 
         public DbSet<StudentQuizAttempt> StudentQuizAttempts { get; set; }
         public DbSet<StudentQuestionBankAnswer> StudentQuestionBankAnswers { get; set; }
-        public DbSet<StudentQuestionAnswer> StudentQuestionAnswers { get; set; }
-
+        public DbSet<Notification> Notifications { get; set; }
         public DbSet<StudyPlan> StudyPlans { get; set; }
 
         // =========================

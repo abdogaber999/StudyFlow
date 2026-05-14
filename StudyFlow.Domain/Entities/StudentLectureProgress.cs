@@ -8,6 +8,8 @@ namespace StudyFlow.Domain.Entities
 
         public int LectureId { get; set; }
 
+        public bool PdfCompleted { get; set; }
+
         public bool VideoCompleted { get; set; }
 
         public bool AudioCompleted { get; set; }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StudyFlow.Infrastructure.DbContexts;
 
@@ -11,9 +12,11 @@ using StudyFlow.Infrastructure.DbContexts;
 namespace StudyFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(StudyFlowDbContext))]
-    partial class StudyFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425192616_AddNotificationsTable")]
+    partial class AddNotificationsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -413,9 +416,6 @@ namespace StudyFlow.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("MindMapCompleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("PdfCompleted")
                         .HasColumnType("bit");
 
                     b.Property<bool>("QuestionBankCompleted")
