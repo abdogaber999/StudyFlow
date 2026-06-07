@@ -1,0 +1,772 @@
+Study Flow
+UI/UX Documentation
+AI-Powered Educational Platform
+Graduation Project — UX/UI Design
+Design Team · 2024–2025
+Study Flow — UI/UX Documentation
+Page 2
+Table of Contents
+01 Project Overview
+02 Main UX Goals
+03 User Personas
+04 Design System
+Color Palette
+Typography
+Icons — Heroicons
+Grid & Spacing System
+05 Design Principles
+06 Navigation System
+07 AI Integration Experience
+08 Student Screens
+Splash Screen
+Login Screen
+Home Screen
+Subjects Screen
+Lecture Details Screen
+PDF Viewer Screen
+AI Chat Screen
+Quiz Screen
+09 Instructor Screens
+Dashboard
+Upload PDF Screen
+Materials Screen
+10 User Flow
+11 Accessibility Considerations
+12 Conclusion
+Study Flow — UI/UX Documentation
+Page 3
+01 Project Overview
+What is Study Flow?
+Study Flow is an AI-powered educational platform built specifically for university students. The
+platform was designed to transform traditional academic materials — dense lecture PDFs, lengthy
+textbooks, and complex subject content — into accessible, interactive, and structured learning
+experiences that genuinely match the way students study in real life.
+Rather than presenting students with a static document viewer or a simple note-taking tool, Study
+Flow acts as a complete academic companion. It takes a single lecture file uploaded by an instructor
+and automatically unlocks five distinct ways to engage with that same material: reading, listening,
+visualizing, testing, and conversing with an intelligent assistant. Every format is generated from the
+source content using artificial intelligence, which means the student always has multiple entry points
+into the same lecture without any additional manual preparation.
+The Problem
+University students today face a fragmented study experience. A typical study session requires a
+student to open a PDF reader to access lecture slides, switch to a browser to search for explanations,
+open a separate note-taking application to write summaries, use another tool to generate practice
+questions, and perhaps message a classmate or use an AI chatbot for clarifications — all while trying
+to maintain focus on the actual academic content.
+This constant context-switching between multiple applications is not a minor inconvenience.
+Research in cognitive psychology consistently shows that task-switching significantly increases
+cognitive load, reduces information retention, and extends the total time required to complete a study
+session. For university students managing multiple subjects simultaneously, this fragmentation
+compounds over time and directly impacts academic performance.
+Beyond the tool fragmentation problem, students also struggle with content density. University lecture
+materials are typically long, technically complex, and difficult to revise efficiently — especially under
+exam pressure. Most students do not have a reliable system for converting dense lecture PDFs into
+formats that support quick revision, active recall, or audio-based review.
+The Solution
+Study Flow addresses both of these problems simultaneously. By centralizing all essential
+educational tools inside a single mobile platform and automating the conversion of lecture content
+into multiple learning formats, the application eliminates the need for students to switch between tools
+and removes the manual effort traditionally required to prepare revision materials.
+The platform supports five distinct content formats derived from each lecture, all accessible from a
+single screen without any navigation away from the material:
+• The PDF Viewer allows students to read the original lecture material directly inside the app, with
+AI-powered actions available to generate notes or mind maps from the content on demand.
+Study Flow — UI/UX Documentation
+Page 4
+• The AI Podcast converts lecture text into a structured audio format, allowing students to engage
+with content during commuting, exercise, or other activities where screen use is impractical.
+• The Mind Map feature automatically generates a visual representation of lecture concepts and
+their relationships, which significantly improves comprehension and memorization for complex
+topics.
+• The Quiz section generates practice questions directly from the lecture content, providing a
+structured active recall experience with instant feedback after each answer.
+• The AI-generated Notes deliver a condensed, structured summary of the lecture material,
+designed specifically to reduce reading fatigue and accelerate exam revision.
+Alongside these content formats, a context-aware AI assistant remains accessible throughout the
+entire application. The assistant adapts its responses based on the active lecture and subject,
+functioning as a personalized academic tutor that students can consult at any point without
+interrupting their current study activity.
+Two User Groups
+Study Flow serves two distinct groups with different needs and interaction patterns. University
+students are the primary users — they engage with the platform daily to access lecture content, study
+using different formats, track their progress, and get academic support through the AI assistant.
+University instructors interact with the platform through a separate interface designed around content
+management rather than content consumption. Instructors upload lecture PDFs, organize materials
+by subject, and monitor student engagement and performance through a centralized dashboard. The
+instructor experience was designed to require minimal technical effort — uploading a file and
+assigning it to a course is all that is needed to make an entire set of AI-powered study tools available
+to students.
+Design Approach
+From a UI/UX perspective, the design process was driven by a clear and consistent set of priorities:
+reduce cognitive overload, eliminate unnecessary navigation steps, maintain visual clarity across
+content-heavy screens, and ensure that artificial intelligence feels like a natural part of the learning
+experience rather than an add-on feature.
+A dark interface theme was chosen deliberately to reduce eye strain during extended study sessions
+and improve text readability on mobile screens in varying lighting conditions. The overall visual
+language was kept intentionally minimal — not for aesthetic reasons alone, but because educational
+content itself is visually demanding, and a cluttered interface would compete with the academic
+material students need to focus on.
+Every screen in the application was designed with a specific educational purpose, and every design
+decision — from component placement to color usage to navigation depth — was evaluated against
+that purpose before being finalized.
+Study Flow — UI/UX Documentation
+Page 5
+02 Main UX Goals
+Simplifying Academic Content
+University lectures are typically long, dense, and difficult to revise efficiently under time pressure. The
+system was designed to offer multiple content formats — audio, visual, text summaries, and
+interactive assessments — so students can access and process the same material in whatever way
+works best for them.
+Reducing Student Distraction
+One of the most common problems observed during the research phase was that students regularly
+switch between five or more applications during a single study session. Centralizing all educational
+tools inside one platform eliminates this context-switching and keeps students focused on the content
+at hand.
+Improving Study Efficiency
+The experience was designed to help students study faster and more effectively through quick lecture
+access, AI-powered assistance, pre-organized notes, instant quizzes, and visible progress indicators
+that maintain motivation.
+Supporting Different Learning Styles
+Different students process information in different ways. The platform accommodates auditory
+learners through podcasts, visual learners through mind maps, active learners through quizzes, and
+text-based learners through summarized notes — all within the same educational flow.
+Maintaining Study Continuity
+A significant UX goal was ensuring that students can always pick up exactly where they left off. The
+'Continue Studying' section, progress indicators, and contextual AI assistance all work together to
+reduce the friction of returning to a study session after a break.
+Study Flow — UI/UX Documentation
+Page 6
+03 User Personas
+Two distinct user personas were developed to guide design decisions throughout the project. Each
+persona represents a core user group with different goals, pain points, and interaction patterns within
+the platform.
+Persona 01 — The University Student
+Name
+Ahmed Hassan
+Age
+21 years old
+Major
+Computer Science — Third Year
+Location
+Cairo, Egypt
+Device
+Smartphone (primary) and laptop (secondary)
+Goals
+• Organize lecture materials in one place without switching between multiple applications
+• Revise content quickly and efficiently before exams and quizzes
+• Access different formats of the same lecture depending on available time and energy
+• Track academic progress across all enrolled subjects
+• Get instant answers to academic questions without leaving the study environment
+Pain Points
+• Long academic PDFs are exhausting to read and difficult to revise efficiently
+• Information overload during intensive study periods leads to reduced retention
+• Difficulty maintaining consistent study habits and tracking progress
+• Constantly switching between applications breaks focus and reduces productivity
+• Lack of quick revision tools makes exam preparation stressful
+Preferred Learning Style
+Ahmed learns best through a combination of interactive quizzes and AI-generated summaries. He
+also uses audio content during commuting and prefers visual concept maps when studying complex
+topics. He values speed and efficiency over exhaustive detail when revising before exams.
+[ Insert Student Persona visual — Ahmed Hassan ]
+Study Flow — UI/UX Documentation
+Page 7
+Persona 02 — The University Instructor
+Name
+Dr. Mohamed Salah
+Age
+42 years old
+Department
+Faculty of Engineering — Electronics Department
+Experience
+14 years of academic teaching
+Device
+Smartphone (primary) and laptop (secondary)
+Goals
+• Upload and organize lecture materials quickly without technical complexity
+• Monitor student engagement and identify which materials are being used most
+• Simplify the process of updating and managing educational content
+• Ensure students can easily access the materials uploaded for each course
+Pain Points
+• Managing large collections of lecture files across multiple courses simultaneously
+• Limited visibility into how students actually interact with uploaded materials
+• Difficulty tracking student performance across different subjects and assessments
+• Traditional tools require multiple steps to upload, organize, and share educational content
+Preferred Workflow
+Dr. Mohamed prefers working through centralized dashboards that give him a clear overview of all his
+courses and student activity in one place. He values simplicity and efficiency — he does not want to
+spend time learning complex interfaces and expects educational management tools to work with
+minimal steps and friction.
+[ Insert Instructor Persona visual — Dr. Mohamed Salah ]
+Study Flow — UI/UX Documentation
+Page 8
+04 Design System
+The design system was developed to maintain visual consistency across all application screens while
+supporting usability, readability, and smooth user interaction throughout the entire platform. Every
+visual decision — from color choices to spacing values — was made intentionally to serve the
+educational context of the application.
+A modern dark educational interface style was selected to reduce visual fatigue during long study
+sessions and improve readability across different lighting conditions. The design language combines
+minimal layouts, structured spacing, and accessible color contrast to create a clean and
+distraction-free learning environment that keeps students focused on content rather than interface.
+Color Palette
+The application uses a structured color palette to establish visual hierarchy and support different
+interaction states throughout the user experience. Each color serves a specific functional role and
+was selected based on accessibility standards, contrast ratios, and the overall dark theme of the
+interface.
+The primary blue was chosen to represent focus, productivity, and interactive actions. The secondary
+indigo supports highlights and secondary UI elements. The AI accent purple specifically marks all
+features powered by artificial intelligence, creating a consistent visual language around smart
+features. Dark surface colors were intentionally used to minimize eye strain during extended study
+periods.
+Primary Colors
+C
+ol
+or
+Role
+Hex Code
+Usage
+Primary Blue
+#2563EB
+Primary buttons, active states, progress
+indicators
+Secondary Indigo
+#4F46E5
+Secondary elements, highlights, secondary
+actions
+AI Accent
+#8B5CF6
+AI assistant features and smart AI-powered
+interactions
+Background & Surface Colors
+C
+ol
+or
+Role
+Hex Code
+Usage
+Study Flow — UI/UX Documentation
+Page 9
+Main Background
+#0F172A
+Primary application background — dark theme
+base
+Surface Background
+#1E293B
+Cards, containers, bottom sheets, modal
+surfaces
+Progress Background
+#334155
+Inactive progress areas and muted surface
+elements
+Typography Colors
+C
+ol
+or
+Role
+Hex Code
+Usage
+Primary Text
+#F8FAFC
+Main headings and primary content text
+Secondary Text
+#CBD5E1
+Descriptions, labels, and supporting
+information
+Muted Text
+#94A3B8
+Captions, disabled states, and inactive
+elements
+Status & Progress Colors
+C
+ol
+or
+Role
+Hex Code
+Usage
+Success
+#22C55E
+Completed tasks, success states, positive
+feedback
+Error
+#EF4444
+Validation messages, errors, and destructive
+actions
+Warning
+#F59E0B
+Pending tasks, warnings, and caution
+indicators
+Progress Blue
+#3B82F6
+Progress bars, loading indicators, active
+progress
+Typography
+Typography was carefully selected to improve readability and establish a clear visual hierarchy
+across all educational screens. Given the content-heavy nature of the platform — with lectures,
+notes, quizzes, and AI responses displayed throughout the interface — the typography system plays
+a critical role in making large amounts of text comfortable and easy to read.
+The type system uses multiple weight variations and scalable font sizes to separate headings, body
+content, labels, captions, and interactive components. Large headings improve content scanning and
+help students quickly identify sections, while smaller type styles were optimized for descriptions,
+Study Flow — UI/UX Documentation
+Page 10
+notes, and secondary information without creating visual noise.
+Style
+Font Size
+Font Weight
+Line Height
+XL Bold
+36px
+Bold (700)
+150%
+XL Medium
+36px
+Medium (500)
+42px
+XL Regular
+36px
+Regular (400)
+Auto
+LG Bold
+24px
+Bold (700)
+Auto
+LG Medium
+24px
+Medium (500)
+Auto
+LG Regular
+24px
+Regular (400)
+Auto
+MD Bold
+18px
+Bold (700)
+Auto
+MD Medium
+18px
+Medium (500)
+Auto
+MD Regular
+18px
+Regular (400)
+22px
+SM Bold
+15px
+Bold (700)
+Auto
+SM Medium
+15px
+Medium (500)
+Auto
+SM Regular
+15px
+Regular (400)
+22px
+XS Bold
+12px
+Bold (700)
+16px
+XS Regular
+12px
+Regular (400)
+16px
+XS Note
+11px
+Regular (400)
+Auto
+Icons — Heroicons
+Heroicons was selected as the primary icon library throughout the entire application. Heroicons
+provides a clean, modern, and consistent visual style that aligns well with the minimal and
+educational design language of Study Flow.
+The icon system was applied across navigation elements, action buttons, content labels, and status
+indicators. Using a single unified icon library ensures visual consistency across all screens and
+reduces cognitive effort required to understand interface actions. Icons were used at standardized
+sizes to maintain alignment with the overall grid and spacing system.
+Grid & Spacing System
+A responsive mobile grid system was implemented to maintain layout consistency and organized
+alignment across different screen sizes and device types. The grid structure improves spacing
+organization, component alignment, and overall visual balance inside the interface.
+Study Flow — UI/UX Documentation
+Page 11
+The application follows a structured mobile grid with consistent gutter spacing to simplify content
+arrangement and maintain a clean visual structure across all screens.
+[ Insert Mobile Grid System screenshot ]
+A consistent spacing system was implemented alongside the grid to improve readability, visual
+breathing space, and overall interface organization. Standardized spacing values were applied
+across all screens to maintain consistency between cards, sections, buttons, and educational
+components. The spacing system also reduces cognitive overload by creating cleaner content
+separation and improving information hierarchy throughout the application.
+[ Insert Spacing System screenshot ]
+Study Flow — UI/UX Documentation
+Page 12
+05 Design Principles
+The UI/UX design process was guided by a set of core principles that shaped every decision
+throughout the project — from layout structure to interaction patterns to visual hierarchy.
+Minimal Interface Design
+Educational applications naturally contain dense information and multiple learning resources. A
+minimal visual style was selected to avoid overwhelming students during study sessions. The
+interface prioritizes clarity, readability, and content focus rather than decorative visual elements.
+Every UI element present on screen has a clear purpose.
+Consistency Across All Screens
+Consistent layouts, spacing rules, typography, and interaction patterns were maintained throughout
+the entire application. This consistency reduces the learning curve for new users and improves
+navigation familiarity — students can quickly understand how the application works without needing
+repeated guidance or extended onboarding.
+Accessibility and Readability
+Accessibility principles were considered throughout the design process to improve usability for
+different users and varying study conditions. The interface includes readable typography at
+appropriate sizes, high-contrast text against dark surfaces, large touch targets for comfortable mobile
+interaction, and simplified navigation patterns that reduce cognitive effort.
+Reduced Cognitive Load
+One of the primary UX goals was reducing cognitive overload during study sessions. This was
+achieved through card-based layouts that group related content, simplified navigation with minimal
+depth, contextual AI assistance that provides help without requiring extra steps, and a structured
+content hierarchy that guides students through educational material naturally.
+Focus-Oriented Experience
+The platform was designed to keep students inside a single learning ecosystem rather than forcing
+them to switch between multiple applications. Notes, quizzes, podcasts, mind maps, the AI assistant,
+and the PDF viewer were all centralized within the same learning flow to improve continuity, reduce
+distractions, and support longer, more effective study sessions.
+Study Flow — UI/UX Documentation
+Page 13
+06 Navigation System
+The application navigation structure was designed to simplify movement between educational
+resources while minimizing the number of interaction steps required to access any feature. Every
+navigation decision was made with one goal in mind: getting students to their content as quickly as
+possible.
+Bottom navigation was selected as the primary navigation pattern because it provides fast access to
+the most frequently used features, supports one-hand mobile usability, and follows familiar interaction
+patterns that most students already use in other mobile applications. This familiarity reduces the
+learning curve significantly and allows users to navigate the platform confidently from the first
+session.
+The navigation structure was kept intentionally shallow — most content is reachable within two or
+three taps from the home screen. This shallow depth reduces navigation fatigue and prevents
+students from losing track of where they are within the application.
+[ Insert Bottom Navigation / Navigation Structure screenshot ]
+Study Flow — UI/UX Documentation
+Page 14
+07 AI Integration Experience
+Artificial intelligence is not a secondary feature in Study Flow — it is one of the platform's core pillars.
+Every major student interaction has an AI-powered option available, and the entire educational
+experience was designed around the assumption that intelligent assistance should always be within
+reach.
+The floating AI assistant was implemented as a globally accessible button that appears across all
+main application screens. This design decision ensures that students can ask questions, generate
+summaries, create quizzes, or request explanations at any point during their study session without
+navigating away from their current activity.
+The AI assistant is context-aware by design. It dynamically adapts its responses and suggestions
+based on the active lecture, the selected subject, and the current educational context the student is
+working within. This context-awareness significantly improves response relevance and creates a
+more personalized and accurate educational experience compared to a generic AI chatbot.
+AI-powered capabilities available throughout the platform include:
+• Lecture-specific question answering and academic clarifications
+• Automatic generation of concise, structured study notes from PDF content
+• Smart quiz creation based on lecture material for active recall practice
+• Audio podcast generation that converts lecture text into listenable audio
+• Visual mind map generation to simplify and visualize complex concepts
+• Context-aware suggestions based on the student's current study activity
+[ Insert Floating AI Assistant / AI Button screenshot ]
+Study Flow — UI/UX Documentation
+Page 15
+08 Student Screens
+The student interface covers the complete learning journey — from the moment the application opens
+to the completion of a lecture with all its associated study tools. Each screen was designed with a
+specific educational purpose and supported by deliberate UX decisions.
+Splash Screen
+Purpose
+The Splash Screen creates the first visual interaction between the student and the platform. It
+introduces the Study Flow brand identity and sets the visual tone for the entire application. The
+screen was designed using minimal visual elements and a smooth transition animation to reduce
+startup distraction and create an emotionally positive first impression. The transition duration was
+kept deliberately short to minimize perceived wait time while system resources and user data load in
+the background.
+Main Components
+• Application logo and brand identity
+• Smooth animated transition
+• Minimal dark background
+UX Decisions
+• Minimal elements reduce visual noise during startup
+• Short duration reduces frustration from perceived loading time
+• The transition creates a smoother emotional connection with the product
+[ Insert screenshot — Splash Screen ]
+Login Screen
+Purpose
+The Login Screen allows students and instructors to securely access their accounts and personalized
+academic environments. The authentication flow was deliberately simplified to reduce friction and
+allow students to reach their study materials as quickly as possible. Multiple sign-in options were
+provided to accommodate different user preferences.
+Main Components
+Study Flow — UI/UX Documentation
+Page 16
+• Email and password input fields with clear labels
+• Primary login button with consistent styling
+• Forgot password recovery option
+• Google sign-in for faster authentication
+• Navigation link to the sign-up flow
+UX Decisions
+• Simplified authentication reduces friction for returning users
+• Input field spacing and labeling improve readability and accessibility
+• Validation messages provide direct and understandable error feedback
+• Multiple sign-in options accommodate different student preferences
+[ Insert screenshot — Login Screen ]
+Home Screen
+Purpose
+The Home Screen acts as the central educational dashboard of the application. It was designed to
+minimize unnecessary navigation steps and allow students to continue studying immediately after
+opening the application. The dashboard structure was prioritized because students typically open the
+app with a specific task in mind and should not have to navigate through multiple screens to reach it.
+Main Components
+• Personalized welcome section with profile image
+• Progress overview with visual indicators and percentages
+• Continue Studying section for immediate task resumption
+• Subjects preview with progress indicators and quick access
+• Upcoming reminders and scheduled tasks
+• Globally accessible floating AI assistant shortcut
+UX Decisions
+• Dashboard structure supports goal-oriented entry behavior
+• Continue Studying section reduces navigation steps for returning users
+• Visual progress indicators improve motivation through achievement visibility
+• Card-based subjects layout improves scanning and quick navigation
+• The floating AI button keeps intelligent assistance always within reach
+Study Flow — UI/UX Documentation
+Page 17
+[ Insert screenshot — Home Screen ]
+Subjects Screen
+Purpose
+The Subjects Screen organizes all enrolled university courses into a structured, easy-to-navigate
+environment. The screen gives students a clear overview of their academic workload and allows fast
+navigation to any course without unnecessary steps.
+Main Components
+• Structured subject cards with course information
+• Progress indicators for each subject
+• Search functionality for quick course lookup
+• Lecture lists accessible from within each subject card
+UX Decisions
+• Cards create clear visual separation between different subjects
+• Progress indicators help students prioritize which subjects need attention
+• Search functionality reduces navigation time when managing many subjects
+• Organized categorization supports efficient management of multiple courses
+[ Insert screenshot — Subjects Screen ]
+Lecture Details Screen
+Purpose
+The Lecture Details Screen represents the core educational experience of the platform. When a
+student selects a lecture, the system presents all available learning formats for that specific lecture
+within a single, unified screen. This centralization eliminates the need to navigate between separate
+screens for different content types and keeps the student's focus on the lecture material itself.
+Main Components
+• Podcast section for audio-format lecture consumption
+• Mind map section for visual concept understanding
+Study Flow — UI/UX Documentation
+Page 18
+• Quiz section for active recall and assessment
+• AI Notes section for summarized study content
+• Floating AI assistant shortcut for instant academic support
+UX Decisions
+• Centralizing all lecture content reduces navigation complexity
+• Multiple formats accommodate different learning styles within one flow
+• Quizzes placed after content support active recall and memory reinforcement
+• Mind maps embedded inside lecture screens reduce the need for external tools
+• The AI assistant shortcut provides support without interrupting the learning flow
+[ Insert screenshot — Lecture Details Screen ]
+PDF Viewer Screen
+Purpose
+The integrated PDF Viewer allows students to access lecture materials directly inside the application
+without switching to external PDF readers. This design decision was made to eliminate one of the
+most common causes of distraction during study sessions — leaving the application to open files in a
+separate reader.
+Main Components
+• Integrated PDF reader with scrolling and zoom functionality
+• AI-powered actions: generate notes directly from the PDF
+• AI-powered actions: generate mind maps from selected content
+• Annotation and navigation controls
+UX Decisions
+• Internal PDF viewing eliminates application-switching and maintains focus
+• AI shortcuts embedded within the viewer reduce manual note-taking effort
+• Zoom and scroll functionality match native reader expectations for familiarity
+• Direct AI integration accelerates comprehension of complex academic documents
+[ Insert screenshot — PDF Viewer Screen ]
+Study Flow — UI/UX Documentation
+Page 19
+AI Chat Screen
+Purpose
+The AI Chat Screen provides conversational academic support powered by artificial intelligence. The
+screen uses a familiar chat interface pattern that most students already understand from everyday
+messaging applications, which significantly reduces the learning curve and allows students to interact
+naturally from their first session.
+Main Components
+• Conversational message interface
+• Contextual responses adapted to the active lecture and subject
+• Suggested question prompts to guide interaction
+• Lecture-aware academic assistance
+UX Decisions
+• Chat interface pattern reduces onboarding friction through familiarity
+• Context-awareness improves response relevance and educational accuracy
+• Suggested questions help students who are unsure how to start interacting
+• Continuous accessibility ensures students never need to leave their study flow to get help
+[ Insert screenshot — AI Chat Screen ]
+Quiz Screen
+Purpose
+The Quiz Screen measures student understanding through interactive, self-paced assessments. The
+screen was designed to make evaluation feel engaging rather than stressful, with clear question
+presentation and immediate feedback after each answer.
+Main Components
+• Multiple choice questions with clear answer options
+• Instant correct/incorrect feedback after each answer
+• Final score display with performance summary
+• Progress tracking across multiple quiz attempts
+UX Decisions
+Study Flow — UI/UX Documentation
+Page 20
+• Immediate feedback strengthens learning reinforcement and improves memory retention
+• Clear question layout reduces cognitive effort required to understand the assessment format
+• Performance tracking motivates improvement and identifies weak areas
+• Quiz placement after lecture content supports active recall learning methodology
+[ Insert screenshot — Quiz Screen ]
+Study Flow — UI/UX Documentation
+Page 21
+09 Instructor Screens
+The instructor interface was designed with a different set of priorities compared to the student
+interface. While students need quick access to learning content, instructors need efficient tools for
+content management, publication, and performance monitoring. The instructor experience focuses on
+simplicity, clarity, and centralized control.
+Instructor Dashboard
+Purpose
+The Instructor Dashboard provides a centralized academic management environment where
+instructors can monitor all their courses, uploaded materials, student engagement metrics, and recent
+activity from a single screen. The dashboard structure was selected because instructors typically
+need a broad overview before diving into specific management tasks.
+Main Components
+• Overview of all uploaded lecture materials
+• Recent activity feed for quick status monitoring
+• Student engagement metrics and interaction data
+• Quick access shortcuts to common management actions
+UX Decisions
+• Dashboard structure gives instructors immediate situational awareness
+• Centralized overview eliminates the need to navigate between multiple management screens
+• Activity feed keeps instructors updated without requiring active checking
+[ Insert screenshot — Instructor Dashboard ]
+Upload PDF Screen
+Purpose
+The Upload PDF Screen allows instructors to upload lecture files and educational resources to the
+platform. The screen was designed to make the upload process as straightforward as possible,
+minimizing the number of steps required to publish a new lecture.
+Main Components
+• File upload interface with drag-and-drop support
+Study Flow — UI/UX Documentation
+Page 22
+• File preview before publishing
+• Course assignment for organizing content
+• Publishing confirmation and status feedback
+UX Decisions
+• Simplified upload flow reduces time investment for instructors
+• File preview allows instructors to verify content before publication
+• Course assignment keeps materials organized and easily accessible to the right students
+[ Insert screenshot — Upload PDF Screen ]
+Materials Screen
+Purpose
+The Materials Screen allows instructors to view and manage all educational content that has been
+uploaded to the platform. It provides a structured overview of all materials with editing and
+organization capabilities.
+Main Components
+• Complete list of all uploaded materials
+• Edit and update existing files
+• Delete or archive outdated materials
+• Subject and course organization tools
+UX Decisions
+• Centralized materials management reduces organizational complexity
+• Edit and delete capabilities allow instructors to keep content current
+• Organized structure helps instructors manage large lecture collections efficiently
+[ Insert screenshot — Materials Screen ]
+Study Flow — UI/UX Documentation
+Page 23
+[ Insert Instructor Screens overview screenshot ]
+Study Flow — UI/UX Documentation
+Page 24
+10 User Flow
+The following user flows map the primary interaction paths for both student and instructor personas.
+The flows were designed to minimize the number of steps between entry and task completion, while
+ensuring all core educational tools remain accessible within a natural learning progression.
+Student Flow — Learning & Study Journey
+The student journey begins at the Splash Screen and moves through authentication into the Home
+Dashboard. From there, students navigate to their enrolled Subjects and open a specific Lecture.
+Once inside a lecture, five learning resource formats become accessible simultaneously: the PDF
+Viewer for reading lecture material directly, the AI-generated Podcast for audio-based revision, Mind
+Maps for visual concept understanding, Quizzes for testing comprehension, and AI-generated Notes
+for quick summaries. Throughout the entire flow, the AI Assistant remains accessible from any point,
+allowing students to ask questions without leaving their current activity. All learning activity feeds into
+a Progress Tracking system that records performance and achievements across sessions.
+Splash Screen
+Login / Sign Up
+Home Dashboard
+Subjects
+Lecture Details
+Access Learning Resources
+PDF Viewer
+Podcast
+Mind Maps
+Quiz
+AI Notes
+AI Assistant
+Progress Tracking
+Instructor Flow — Teaching & Management Journey
+The instructor journey starts at Login and lands directly on the Dashboard, which provides an
+overview of all courses and quick management stats. From there, instructors can upload new lecture
+PDFs, organize and manage existing materials, monitor student engagement through the Analytics
+screen, and stay updated through Notifications about platform activity and student interactions.
+Login / Sign
+Up
+Dashboard
+Upload PDF
+Materials
+Analytics
+Notifications
+[ Insert User Flow Diagram ]
+Study Flow — UI/UX Documentation
+Page 25
+11 Accessibility Considerations
+Accessibility was treated as a design requirement rather than an afterthought throughout the entire
+project. The interface was built to remain usable and comfortable across different user abilities,
+device conditions, and study environments.
+Readable Typography
+Font sizes were selected to remain comfortable across different screen sizes and viewing conditions.
+Line heights and letter spacing were optimized specifically for long-form educational content reading.
+High Contrast Colors
+All text and interactive elements maintain adequate contrast ratios against their backgrounds. The
+dark theme was specifically chosen to improve contrast while reducing eye strain during extended
+study sessions under varying lighting conditions.
+Large Touch Targets
+All interactive elements including buttons, cards, navigation items, and input fields were designed
+with touch targets large enough to be activated comfortably without precision tapping.
+Simplified Navigation Patterns
+Navigation depth was kept intentionally shallow, and interaction patterns were aligned with familiar
+mobile conventions to minimize the cognitive effort required to move through the application.
+Organized Educational Layouts
+Content is presented in structured, predictable layouts that allow students to scan and locate
+information quickly without needing to read everything on screen.
+Consistent Interaction Patterns
+The same interaction patterns, gestures, and component behaviors are used consistently throughout
+all screens, ensuring that students do not need to relearn how the interface works as they move
+between different parts of the application.
+Study Flow — UI/UX Documentation
+Page 26
+12 Conclusion
+Study Flow was designed from the ground up to give university students a centralized, focused, and
+intelligent learning environment that respects both their time and their cognitive capacity. Every
+design decision throughout this project — from the choice of a dark color palette to the placement of
+the floating AI button — was made in service of one central idea: students should spend their energy
+on learning, not on managing their tools.
+The platform addresses real and documented student pain points: information overload from dense
+academic PDFs, distraction from switching between multiple applications, difficulty maintaining study
+consistency, and the lack of personalized, context-aware academic support. Each of these pain
+points was addressed through deliberate UX strategy rather than surface-level feature additions.
+The design system provides a solid visual foundation that ensures consistency and scalability as the
+platform grows. The structured color palette, typography system, spacing rules, and component
+library all work together to create an interface that feels professional, educational, and trustworthy.
+The AI integration is not a marketing feature — it is genuinely embedded into the core student
+experience in a way that makes every study session more efficient, more personalized, and more
+effective than what traditional educational tools can offer.
+The result is a platform that brings together usability, accessibility, and intelligent educational support
+to create a smoother, more effective, and more enjoyable learning journey — for students who want
+to study smarter, and for instructors who want to teach more efficiently.
+Study Flow — UI/UX Documentation
+Graduation Project · 2024–2025
