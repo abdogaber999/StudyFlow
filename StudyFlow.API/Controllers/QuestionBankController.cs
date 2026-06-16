@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyFlow.API.DTOs;
@@ -45,24 +45,7 @@ namespace StudyFlow.API.Controllers
             if (!questions.Any())
                 return BadRequest("No question bank found for this lecture.");
 
-            // =====================================
-            // 🔥 CLEAN OLD ANSWERS (IMPORTANT جداً)
-            // =====================================
-            var oldAnswers = await _context.StudentQuestionBankAnswers
-                .Include(a => a.Question)
-                .Where(a =>
-                    a.StudentId == studentId &&
-                    a.Question.LectureId == model.LectureId)
-                .ToListAsync();
-
-            if (oldAnswers.Any())
-            {
-                _context.StudentQuestionBankAnswers.RemoveRange(oldAnswers);
-                await _context.SaveChangesAsync();
-            }
-
             int score = 0;
-            var wrongQuestions = new List<Question>();
             var resultDetails = new List<object>();
 
             foreach (var answer in model.Answers)
@@ -79,8 +62,6 @@ namespace StudyFlow.API.Controllers
 
                 if (isCorrect)
                     score++;
-                else
-                    wrongQuestions.Add(question);
 
                 var existingAnswer = await _context.StudentQuestionBankAnswers
                     .FirstOrDefaultAsync(a =>
@@ -112,8 +93,23 @@ namespace StudyFlow.API.Controllers
                 });
             }
 
+            // 🔥 Save answers first (upsert)
+            await _context.SaveChangesAsync();
+
             // =====================================
-            // 🔥 Generate Quiz From Wrong Questions
+            // 🔥 Get ALL wrong questions (تراكمي من كل المحاولات)
+            // =====================================
+            var wrongQuestions = await _context.Questions
+                .Where(q =>
+                    q.LectureId == model.LectureId &&
+                    _context.StudentQuestionBankAnswers.Any(a =>
+                        a.StudentId == studentId &&
+                        a.QuestionId == q.Id &&
+                        !a.IsCorrect))
+                .ToListAsync();
+
+            // =====================================
+            // 🔥 Generate Quiz From ALL Wrong Questions
             // =====================================
             int? quizId = null;
 
@@ -204,6 +200,7 @@ namespace StudyFlow.API.Controllers
                     : (score * 100) / model.Answers.Count,
                 quizGenerated = quizId != null,
                 quizId,
+                quizQuestionCount = wrongQuestions.Count,
                 details = resultDetails
             });
         }

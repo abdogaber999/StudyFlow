@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using StudyFlow.Domain.Entities;
 using StudyFlow.Infrastructure.DbContexts;
 
@@ -47,9 +47,68 @@ namespace StudyFlow.API.Services
             if (!File.Exists(physicalPath))
                 return;
 
+            // 🔥 Track failed steps for retry
+            var failedSteps = new List<string>();
+
             // ===============================
             // 🔥 1. QUESTIONS
             // ===============================
+            if (!await RunQuestions(lecture, physicalPath, lectureId))
+                failedSteps.Add("Questions");
+
+            // ===============================
+            // 🔥 2. MINDMAP
+            // ===============================
+            if (!await RunMindMap(lecture, physicalPath, lectureId))
+                failedSteps.Add("MindMap");
+
+            // ===============================
+            // 🔥 3. AUDIO
+            // ===============================
+            if (!await RunAudio(lecture, physicalPath, lectureId))
+                failedSteps.Add("Audio");
+
+            // ===============================
+            // 🔥 4. VIDEO
+            // ===============================
+            if (!await RunVideo(lecture, physicalPath, lectureId))
+                failedSteps.Add("Video");
+
+            // ===============================
+            // 🔄 RETRY FAILED STEPS (مرة واحدة كمان)
+            // ===============================
+            if (failedSteps.Any())
+            {
+                Console.WriteLine($"🔄 RETRYING {failedSteps.Count} FAILED STEPS: {string.Join(", ", failedSteps)}");
+
+                foreach (var step in failedSteps)
+                {
+                    switch (step)
+                    {
+                        case "Questions":
+                            await RunQuestions(lecture, physicalPath, lectureId);
+                            break;
+                        case "MindMap":
+                            await RunMindMap(lecture, physicalPath, lectureId);
+                            break;
+                        case "Audio":
+                            await RunAudio(lecture, physicalPath, lectureId);
+                            break;
+                        case "Video":
+                            await RunVideo(lecture, physicalPath, lectureId);
+                            break;
+                    }
+                }
+
+                Console.WriteLine("🔄 RETRY ROUND FINISHED");
+            }
+        }
+
+        // ===============================
+        // 🔥 Questions Step
+        // ===============================
+        private async Task<bool> RunQuestions(Lecture lecture, string physicalPath, int lectureId)
+        {
             try
             {
                 var aiResult = await _aiService.ProcessPdfAsync(physicalPath);
@@ -95,15 +154,21 @@ namespace StudyFlow.API.Services
 
                     await _notificationService.SendToLectureUsers(lectureId, "Questions");
                 }
+
+                return true;
             }
             catch (Exception ex)
-                {
+            {
                 Console.WriteLine("❌ QUESTIONS ERROR: " + ex.Message);
-                }
+                return false;
+            }
+        }
 
-            // ===============================
-            // 🔥 2. MINDMAP
-            // ===============================
+        // ===============================
+        // 🔥 MindMap Step
+        // ===============================
+        private async Task<bool> RunMindMap(Lecture lecture, string physicalPath, int lectureId)
+        {
             try
             {
                 lecture.MindMapStatus = "Processing";
@@ -120,18 +185,24 @@ namespace StudyFlow.API.Services
 
                     await _notificationService.SendToLectureUsers(lectureId, "MindMap");
                 }
+
+                return true;
             }
             catch (Exception ex)
-                {
+            {
                 lecture.MindMapStatus = "Failed";
                 lecture.MindMapError = ex.Message;
                 await _context.SaveChangesAsync();
                 Console.WriteLine("❌ MINDMAP ERROR: " + ex.Message);
-                }
+                return false;
+            }
+        }
 
-            // ===============================
-            // 🔥 3. AUDIO
-            // ===============================
+        // ===============================
+        // 🔥 Audio Step
+        // ===============================
+        private async Task<bool> RunAudio(Lecture lecture, string physicalPath, int lectureId)
+        {
             try
             {
                 lecture.AudioStatus = "Processing";
@@ -148,18 +219,24 @@ namespace StudyFlow.API.Services
 
                     await _notificationService.SendToLectureUsers(lectureId, "Audio");
                 }
+
+                return true;
             }
             catch (Exception ex)
-                {
+            {
                 lecture.AudioStatus = "Failed";
                 lecture.AudioError = ex.Message;
                 await _context.SaveChangesAsync();
                 Console.WriteLine("❌ AUDIO ERROR: " + ex.Message);
-                }
+                return false;
+            }
+        }
 
-            // ===============================
-            // 🔥 4. VIDEO
-            // ===============================
+        // ===============================
+        // 🔥 Video Step
+        // ===============================
+        private async Task<bool> RunVideo(Lecture lecture, string physicalPath, int lectureId)
+        {
             try
             {
                 lecture.VideoStatus = "Processing";
@@ -176,14 +253,17 @@ namespace StudyFlow.API.Services
 
                     await _notificationService.SendToLectureUsers(lectureId, "Video");
                 }
+
+                return true;
             }
             catch (Exception ex)
-                {
+            {
                 lecture.VideoStatus = "Failed";
                 lecture.VideoError = ex.Message;
                 await _context.SaveChangesAsync();
                 Console.WriteLine("❌ VIDEO ERROR: " + ex.Message);
-                }
+                return false;
             }
+        }
     }
 }

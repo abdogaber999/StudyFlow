@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -247,7 +247,7 @@ namespace StudyFlow.API.Controllers
                     using var pingClient = new HttpClient();
                     pingClient.Timeout = TimeSpan.FromSeconds(10);
 
-                    var ping = await pingClient.GetAsync("http://187.124.217.251/");
+                    var ping = await pingClient.GetAsync("https://grad-project.nabda-capital-group.com/");
 
                     if (!ping.IsSuccessStatusCode)
                     {
@@ -282,7 +282,7 @@ namespace StudyFlow.API.Controllers
 
                 using var aiClient = new HttpClient();
                 aiClient.Timeout = TimeSpan.FromMinutes(5);
-                aiClient.BaseAddress = new Uri("http://187.124.217.251/");
+                aiClient.BaseAddress = new Uri("https://grad-project.nabda-capital-group.com/");
 
                 var response = await aiClient.PostAsync(
                     "api/v1/text/generate-question-bank",
